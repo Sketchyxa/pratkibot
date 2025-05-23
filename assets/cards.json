@@ -1,0 +1,202 @@
+{
+    "Бурд": {
+        "description": "Тупарили монк",
+        "rarity": "legendary",
+        "image": "fire_dragon.mp4"
+    },
+    "ВВкун": {
+        "description": "Лучи прот",
+        "rarity": "common",
+        "image": "forest_elf.mp4"
+    },
+    "Плетко": {
+        "description": "Парнушница чата пратков",
+        "rarity": "rare",
+        "image": "ice_golem.mp4"
+    },
+    "Лендспид": {
+        "description": "Любитель хуйни про космос",
+        "rarity": "epic",
+        "image": "dark_mage.mp4"
+    },
+    "Витачка": {
+        "description": "Лучи праток в макакавам чати",
+        "rarity": "legendary",
+        "image": "sacred_unicorn.mp4"
+    },
+    "Бешбульдог": {
+        "description": "Создатель лучи гефаф",
+        "rarity": "rare",
+        "image": "goblin_mechanic.mp4"
+    },
+    "Парнушнек": {
+        "description": "Прастой парнушник",
+        "rarity": "epic",
+        "image": "ancient_sage.mp4"
+    },
+    "Андрюшка": {
+        "description": "Сын бляди заводской",
+        "rarity": "common",
+        "image": "forest_fairy.mp4"
+    },
+    "сматри какой еплан": {
+        "description": "Ха сматри какой антрушка",
+        "rarity": "legendary",
+        "image": "sea_leviathan.mp4"
+    },
+    "да ти шо пашол ти наку": {
+        "description": "Да ти шо пашол ти наку музар",
+        "rarity": "epic",
+        "image": "ghost_knight.mp4"
+    },
+    "Бабулько": {
+        "description": "О этой я бабулько внучок, дай сюда эту геф, хоп наебал",
+        "rarity": "common",
+        "image": "sand_scorpion.mp4"
+    },
+    "Синашлюкавскикоздек": {
+        "description": "Убирался за денюшку",
+        "rarity": "legendary",
+        "image": "crystal_phoenix.mp4"
+    },
+    "Танцор": {
+        "description": "Прот танцуид",
+        "rarity": "rare",
+        "image": "wind_shaman.mp4"
+    },
+    "Дристун": {
+        "description": "Праток не стершался",
+        "rarity": "epic",
+        "image": "mechanical_titan.mp4"
+    },
+    "нидатрах": {
+        "description": "Очинь сильна тракаца качю",
+        "rarity": "common",
+        "image": "forest_bear.mp4"
+    },
+    "Кирюка и ево парень": {
+        "description": "Кирюка и бешбульмек",
+        "rarity": "legendary",
+        "image": "vampire_queen.mp4"
+    },
+    "Любовные пратки": {
+        "description": "у пратков любоф с мамай антруки",
+        "rarity": "common",
+        "image": "mountain_dwarf.mp4"
+    },
+    "Пдф прот": {
+        "description": "Снай што анкелы не спят",
+        "rarity": "epic",
+        "image": "sky_whale.mp4"
+    },
+    "Суйлор": {
+        "description": "Пастучи па мекрафону",
+        "rarity": "rare",
+        "image": "poison_basilisk.mp4"
+    },
+    "Семья андрюшки": {
+        "description": "Её нет, её не будет, её не будет никогда",
+        "rarity": "rare",
+        "image": "star_drake.mp4"
+    },
+    "Сиськи": {
+        "description": "Очин люблю сисечки плетки",
+        "rarity": "epic",
+        "image": "wisdom_tree.mp4"
+    },
+    "Ахуенни прот": {
+        "description": "Лучи прот в ахуенних сисечках",
+        "rarity": "rare",
+        "image": "desert_djinn.mp4"
+    },
+    "Пэрот": {
+        "description": "Лэ прот ты чо такой петук",
+        "rarity": "common",
+        "image": "snow_wolf.mp4"
+    },
+    "хлопци я свий": {
+        "description": "Хлопці я свій коклик",
+        "rarity": "common",
+        "image": "card24.mp4"
+    },
+    "Я ібав": {
+        "description": "Суецидальні праток",
+        "rarity": "rare",
+        "image": "card25.mp4"
+    },
+    "Зигамет": {
+        "description": "Зигующий бебезянчико",
+        "rarity": "epic",
+        "image": "card26.mp4"
+    },
+    "Теория": {
+        "description": "Теория мертвава палушария сина бляди на антрушке",
+        "rarity": "legendary",
+        "image": "card27.mp4"
+    },
+    "Мама антруки": {
+        "description": "шалава",
+        "rarity": "legendary",
+        "image": "card28.mp4"
+    },
+    "Уставши прот": {
+        "description": "Чота не акота",
+        "rarity": "common",
+        "image": "card29.mp4"
+    },
+    "Спящий прот": {
+        "description": "Пачиму не спиж?",
+        "rarity": "rare",
+        "image": "card30.mp4"
+    },
+    "Братки": {
+        "description": "Я вас сини блядей не брошу тупие сини шлюк маи зуко",
+        "rarity": "epic",
+        "image": "card31.mp4"
+    },
+    "???главный босс???": {
+        "description": "Описание карточки 32",
+        "rarity": "artifact",
+        "image": "card32.mp4"
+    },
+    "Паклопаем": {
+        "description": "Паклопаем далбайобу на жумбосе",
+        "rarity": "artifact",
+        "image": "card33.mp4"
+    },
+    "прот картьожник": {
+        "description": "Иди ти наху рап",
+        "rarity": "common",
+        "image": "card34.mp4"
+    },
+    "Удивленни прот": {
+        "description": "Ну чота я ваще хс",
+        "rarity": "rare",
+        "image": "card35.mp4"
+    },
+    "Завадской": {
+        "description": "чо ищо новава пукнеш",
+        "rarity": "epic",
+        "image": "card36.mp4"
+    },
+    "Макан": {
+        "description": "такой же сын бляди как и лендспид",
+        "rarity": "legendary",
+        "image": "card37.mp4"
+    },
+    "Легендо": {
+        "description": "пере легендо",
+        "rarity": "common",
+        "image": "card38.mp4"
+    },
+    "Гамлет": {
+        "description": "венаминальна",
+        "rarity": "rare",
+        "image": "card39.mp4"
+    },
+    "Зивающи прот": {
+        "description": "Чота утамился ат висирав",
+        "rarity": "epic",
+        "image": "card40.mp4"
+    }
+} 

@@ -4,12 +4,13 @@ from datetime import datetime, timedelta
 from typing import Optional
 import os
 import random
+import aiosqlite
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler
 from telegram.constants import ParseMode
 
-from config import BOT_TOKEN, DAILY_COOLDOWN, xp_for_level, UPGRADE_RULES, TRIPLE_CARD_BONUS
+from config import BOT_TOKEN, DAILY_COOLDOWN, xp_for_level, UPGRADE_RULES, TRIPLE_CARD_BONUS, ADMIN_IDS
 from database import Database
 from cards import get_random_card, get_card_info, format_card_message, get_card_xp, CARDS
 
@@ -40,6 +41,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 /mycards - Посмотреть свою коллекцию
 /profile - Посмотреть свой профиль
 /cardinfo <название> - Информация о карточке
+/leaderboard - Посмотреть список лучших
+/upgrade - улучшить 3 одинаковых карты
 
 Удачи в коллекционировании! 🎉
 """
@@ -142,6 +145,15 @@ async def dailycard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except ValueError:
             pass
 
+    # Проверяем, есть ли у пользователя карточки
+    async with aiosqlite.connect(db.db_path) as db_conn:
+        cursor = await db_conn.execute(
+            "SELECT COUNT(*) FROM cards WHERE user_id = ?",
+            (update.effective_user.id,)
+        )
+        card_count = (await cursor.fetchone())[0]
+        is_first_card = card_count == 0
+
     # Получаем случайную карточку
     card_name, card_info = get_random_card()
     
@@ -169,6 +181,13 @@ async def dailycard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Добавляем карточку пользователю
     count = await db.add_card(update.effective_user.id, card_name)
+
+    # Если это первая карточка пользователя, даём бонусную
+    bonus_message = ""
+    if is_first_card:
+        bonus_card_name, bonus_card_info = get_random_card()
+        await db.add_card(update.effective_user.id, bonus_card_name)
+        bonus_message = f"\n\n🎁 Бонус для новичка!\nВы получаете дополнительную карточку: {bonus_card_name} ({bonus_card_info['rarity'].capitalize()})"
     
     # Проверяем на тройку одинаковых карточек
     if count % 3 == 0:
@@ -200,7 +219,7 @@ async def dailycard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         card_info,
         total_cards,
         time_until
-    )
+    ) + bonus_message
     
     await send_card_message(message, card_info['image_path'], update)
 
@@ -295,7 +314,8 @@ async def cardinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "common": "⚪",
         "rare": "🔵",
         "epic": "🟣",
-        "legendary": "🟡"
+        "legendary": "🟡",
+        "artifact": "🔴"
     }
 
     message = f"""
@@ -319,7 +339,7 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     message = "🏆 Таблица лидеров:\n\n"
     for i, leader in enumerate(leaders, 1):
-        message += f"{i}. @{leader['username']}\n"
+        message += f"{i}. {leader['username']}\n"
         message += f"   ⭐️ {leader['xp']} опыта\n"
         message += f"   🎴 {leader['total_cards']} карточек ({leader['unique_cards']} уникальных)\n\n"
     
@@ -390,6 +410,200 @@ async def upgrade(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await send_card_message(message, new_card_info['image_path'], update)
 
+async def is_admin(user_id: int) -> bool:
+    """Проверка на админа"""
+    return user_id in ADMIN_IDS
+
+async def announce(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Отправить объявление всем пользователям (только для админов)"""
+    if not update.effective_user or not await is_admin(update.effective_user.id):
+        await update.message.reply_text("❌ У вас нет прав для использования этой команды")
+        return
+
+    if not context.args:
+        await update.message.reply_text("❌ Укажите текст объявления: /announce <текст>")
+        return
+
+    announcement = " ".join(context.args)
+    
+    # Получаем всех пользователей из базы
+    async with aiosqlite.connect(db.db_path) as db_conn:
+        cursor = await db_conn.execute("SELECT user_id FROM users")
+        users = await cursor.fetchall()
+
+    success_count = 0
+    fail_count = 0
+
+    # Отправляем сообщение каждому пользователю
+    for user in users:
+        try:
+            await context.bot.send_message(
+                chat_id=user[0],
+                text=f"📢 ОБЪЯВЛЕНИЕ\n\n{announcement}"
+            )
+            success_count += 1
+        except Exception:
+            fail_count += 1
+
+    await update.message.reply_text(
+        f"✅ Объявление отправлено!\n"
+        f"Успешно: {success_count}\n"
+        f"Не удалось: {fail_count}"
+    )
+
+async def set_xp(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Установить опыт пользователю (только для админов)"""
+    if not update.effective_user or not await is_admin(update.effective_user.id):
+        await update.message.reply_text("❌ У вас нет прав для использования этой команды")
+        return
+
+    if len(context.args) != 2:
+        await update.message.reply_text("❌ Использование: /setxp <username> <количество>")
+        return
+
+    username, xp = context.args[0], context.args[1]
+    
+    try:
+        xp = int(xp)
+    except ValueError:
+        await update.message.reply_text("❌ Количество опыта должно быть числом")
+        return
+
+    # Обновляем опыт пользователя
+    async with aiosqlite.connect(db.db_path) as db_conn:
+        await db_conn.execute(
+            "UPDATE users SET xp = ? WHERE username = ?",
+            (xp, username)
+        )
+        await db_conn.commit()
+
+    await update.message.reply_text(f"✅ Установлен опыт {xp} для пользователя {username}")
+
+async def give_card(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Выдать карточку пользователю (только для админов)"""
+    if not update.effective_user or not await is_admin(update.effective_user.id):
+        await update.message.reply_text("❌ У вас нет прав для использования этой команды")
+        return
+
+    if len(context.args) < 2:
+        await update.message.reply_text("❌ Использование: /givecard <username> <название_карточки>")
+        return
+
+    username = context.args[0]
+    card_name = " ".join(context.args[1:])
+    
+    # Проверяем существование карточки
+    card_info = get_card_info(card_name)
+    if not card_info:
+        await update.message.reply_text("❌ Карточка не найдена")
+        return
+
+    # Находим ID пользователя по имени
+    async with aiosqlite.connect(db.db_path) as db_conn:
+        cursor = await db_conn.execute(
+            "SELECT user_id FROM users WHERE username = ?",
+            (username,)
+        )
+        user = await cursor.fetchone()
+        
+        if not user:
+            await update.message.reply_text("❌ Пользователь не найден")
+            return
+        
+        user_id = user[0]
+
+    # Выдаем карточку
+    count = await db.add_card(user_id, card_name)
+    
+    await update.message.reply_text(
+        f"✅ Выдана карточка {card_name} пользователю {username}\n"
+        f"Теперь у него {count} таких карточек"
+    )
+
+async def mass_gift(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Раздать карточку случайным игрокам (только для админов)"""
+    if not update.effective_user or not await is_admin(update.effective_user.id):
+        await update.message.reply_text("❌ У вас нет прав для использования этой команды")
+        return
+
+    if len(context.args) < 2:
+        await update.message.reply_text("❌ Использование: /massgift <количество_игроков> <название_карточки>")
+        return
+
+    try:
+        num_players = int(context.args[0])
+        if num_players <= 0:
+            raise ValueError
+    except ValueError:
+        await update.message.reply_text("❌ Количество игроков должно быть положительным числом")
+        return
+
+    card_name = " ".join(context.args[1:])
+    
+    # Проверяем существование карточки
+    card_info = get_card_info(card_name)
+    if not card_info:
+        await update.message.reply_text("❌ Карточка не найдена")
+        return
+
+    # Получаем всех пользователей из базы
+    async with aiosqlite.connect(db.db_path) as db_conn:
+        cursor = await db_conn.execute("SELECT user_id, username FROM users")
+        all_users = await cursor.fetchall()
+
+    if not all_users:
+        await update.message.reply_text("❌ В базе нет пользователей")
+        return
+
+    # Выбираем случайных пользователей
+    selected_users = random.sample(all_users, min(num_players, len(all_users)))
+    
+    success_count = 0
+    failed_count = 0
+    winners_list = []
+
+    # Фиксированный бонус опыта за участие в раздаче
+    GIVEAWAY_XP_BONUS = 50
+
+    # Раздаем карточки
+    for user_id, username in selected_users:
+        try:
+            # Выдаем карточку
+            count = await db.add_card(user_id, card_name)
+            
+            # Добавляем бонусный опыт
+            await db.add_xp(user_id, GIVEAWAY_XP_BONUS)
+
+            message = f"🎉 Поздравляем! Вы выиграли карточку в раздаче!\n\n"
+            message += f"Карточка: {card_name}\n"
+            message += f"Редкость: {card_info['rarity'].capitalize()}\n"
+            message += f"У вас теперь {count} таких карточек\n"
+            message += f"Получено {GIVEAWAY_XP_BONUS} опыта за участие в раздаче!"
+
+            # Отправляем уведомление пользователю
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=message
+            )
+            
+            success_count += 1
+            winners_list.append(username)
+        except Exception as e:
+            logging.error(f"Ошибка при раздаче карточки: {e}")
+            failed_count += 1
+
+    # Формируем сообщение о результатах
+    result_message = f"✅ Раздача карточки {card_name} завершена!\n\n"
+    result_message += f"Успешно выдано: {success_count}\n"
+    result_message += f"Не удалось выдать: {failed_count}\n"
+    result_message += f"Бонус опыта каждому: {GIVEAWAY_XP_BONUS}\n\n"
+    
+    result_message += "Список победителей:\n"
+    for i, winner in enumerate(winners_list, 1):
+        result_message += f"{i}. {winner}\n"
+
+    await update.message.reply_text(result_message)
+
 if __name__ == "__main__":
     # Создаем и запускаем приложение
     app = Application.builder().token(BOT_TOKEN).build()
@@ -402,6 +616,12 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("cardinfo", cardinfo))
     app.add_handler(CommandHandler("leaderboard", leaderboard))
     app.add_handler(CommandHandler("upgrade", upgrade))
+    
+    # Админские команды
+    app.add_handler(CommandHandler("announce", announce))
+    app.add_handler(CommandHandler("setxp", set_xp))
+    app.add_handler(CommandHandler("givecard", give_card))
+    app.add_handler(CommandHandler("massgift", mass_gift))
     
     # Инициализируем базу данных
     loop = asyncio.get_event_loop()

@@ -7,6 +7,9 @@ load_dotenv()
 # Конфигурация бота
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# Список админов (ID пользователей)
+ADMIN_IDS = [1257601441]
+
 # Конфигурация карточек и их вероятностей выпадения
 CARD_RARITY = {
     "common": {"weight": 69.89, "xp": 10},
